@@ -1,12 +1,12 @@
 package com.cheesouz.api_service.client;
 
-import java.util.List;
+import java.time.LocalDate;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.cheesouz.api_service.dto.UserCreateRequest;
+import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
 
 @Component
@@ -20,11 +20,23 @@ public class UserClient {
                 .build();
     }
 
-    public List<UserResponse> getAllUsers() {
+    public UserPageResponse getUsersPage(int page, int size, String sort, String lastName, LocalDate dateOfBirth) {
         return webClient.get()
-                .uri("/users")
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/users")
+                            .queryParam("page", page)
+                            .queryParam("size", size)
+                            .queryParam("sort", sort);
+                    if (lastName != null && !lastName.isBlank()) {
+                        uriBuilder.queryParam("lastName", lastName);
+                    }
+                    if (dateOfBirth != null) {
+                        uriBuilder.queryParam("dateOfBirth", dateOfBirth);
+                    }
+                    return uriBuilder.build();
+                })
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<UserResponse>>() {})
+                .bodyToMono(UserPageResponse.class)
                 .block();
     }
 

@@ -1,7 +1,8 @@
 package com.cheesouz.api_service.controller;
 
-import java.util.List;
+import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,10 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cheesouz.api_service.client.UserClient;
 import com.cheesouz.api_service.dto.UserCreateRequest;
+import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
 
 @RestController
@@ -27,8 +30,14 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponse> getAllUsers() {
-        return userClient.getAllUsers();
+    public ResponseEntity<UserPageResponse> getUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "lastName,asc") String sort,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth) {
+        return ResponseEntity.ok(userClient.getUsersPage(page, size, sort, lastName, dateOfBirth));
     }
 
     @GetMapping("/{id}")
