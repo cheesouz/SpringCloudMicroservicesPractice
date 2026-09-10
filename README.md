@@ -1,7 +1,3 @@
-# Spring Cloud Microservices Practice
-
-A small practice project built as four independent Spring Boot services that discover each other through Eureka.
-
 | Service | Port | Role |
 |---|---|---|
 | `eureka` | 8761 | Service registry |
