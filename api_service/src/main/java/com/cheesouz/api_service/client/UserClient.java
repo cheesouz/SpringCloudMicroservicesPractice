@@ -2,12 +2,16 @@ package com.cheesouz.api_service.client;
 
 import java.time.LocalDate;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.cheesouz.api_service.dto.UserCreateRequest;
 import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
+import com.cheesouz.api_service.exception.UserNotFoundException;
+
+import reactor.core.publisher.Mono;
 
 @Component
 public class UserClient {
@@ -44,6 +48,8 @@ public class UserClient {
         return webClient.get()
                 .uri("/users/{id}", id)
                 .retrieve()
+                .onStatus(status -> status.value() == HttpStatus.NOT_FOUND.value(),
+                        response -> Mono.error(new UserNotFoundException(id)))
                 .bodyToMono(UserResponse.class)
                 .block();
     }
@@ -62,6 +68,8 @@ public class UserClient {
                 .uri("/users/{id}", id)
                 .bodyValue(request)
                 .retrieve()
+                .onStatus(status -> status.value() == HttpStatus.NOT_FOUND.value(),
+                        response -> Mono.error(new UserNotFoundException(id)))
                 .bodyToMono(UserResponse.class)
                 .block();
     }
@@ -70,6 +78,8 @@ public class UserClient {
         webClient.delete()
                 .uri("/users/{id}", id)
                 .retrieve()
+                .onStatus(status -> status.value() == HttpStatus.NOT_FOUND.value(),
+                        response -> Mono.error(new UserNotFoundException(id)))
                 .toBodilessEntity()
                 .block();
     }

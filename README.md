@@ -38,30 +38,30 @@ cd db_service  && ./gradlew test
 
 ## API
 
-All user endpoints are exposed through `api_service` on port 8080 and load-balanced to `db_service` via service discovery.
+All user endpoints are exposed through `api_service` on port 8080 and load-balanced to `db_service` via service discovery. The same endpoints are also reachable through the `gateway` on port 8082 under the `/api/**` route (e.g. `http://localhost:8082/api/users`).
 
 ### List users (paginated)
 
 ```bash
-curl "http://localhost:8080/users"
+curl "http://localhost:8080/api/users"
 ```
 
 Optional query parameters: `page` (default `0`), `size` (default `20`), `sort` (default `lastName,asc`, supports `lastName` and `dateOfBirth`), `lastName` (partial, case-insensitive), `dateOfBirth` (`yyyy-MM-dd`).
 
 ```bash
-curl "http://localhost:8080/users?page=1&size=10&sort=dateOfBirth,desc&lastName=a"
+curl "http://localhost:8080/api/users?page=1&size=10&sort=dateOfBirth,desc&lastName=a"
 ```
 
 ### Get a user
 
 ```bash
-curl "http://localhost:8080/users/1"
+curl "http://localhost:8080/api/users/1"
 ```
 
 ### Create a user
 
 ```bash
-curl -X POST "http://localhost:8080/users" \
+curl -X POST "http://localhost:8080/api/users" \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "John",
@@ -74,7 +74,7 @@ curl -X POST "http://localhost:8080/users" \
 ### Update a user
 
 ```bash
-curl -X PUT "http://localhost:8080/users/1" \
+curl -X PUT "http://localhost:8080/api/users/1" \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "Jane",
@@ -87,5 +87,5 @@ curl -X PUT "http://localhost:8080/users/1" \
 ### Delete a user
 
 ```bash
-curl -X DELETE "http://localhost:8080/users/1"
+curl -X DELETE "http://localhost:8080/api/users/1"
 ```
