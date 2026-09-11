@@ -1,0 +1,74 @@
+services:
+  eureka:
+    build: ./eureka
+    container_name: eureka
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "8082:8082"
+    networks:
+      - edge
+      - internal
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+    depends_on:
+      eureka:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  api-service:
+    build: ./api_service
+    container_name: api-service
+    networks:
+      - internal
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+    depends_on:
+      eureka:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  db-service:
+    build: ./db_service
+    container_name: db-service
+    networks:
+      - internal
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+    depends_on:
+      eureka:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+networks:
+  edge:
+  internal:

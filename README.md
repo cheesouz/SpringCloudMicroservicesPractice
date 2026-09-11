@@ -1,16 +1,52 @@
 | Service | Port | Role |
 |---|---|---|
 | `eureka` | 8761 | Service registry |
-| `api_service` | 8080 | REST API gateway for user CRUD |
+| `api_service` | 8080 | REST API for user CRUD |
 | `db_service` | 8081 | Data layer (H2 in-memory) |
-| `gateway` | 8082 | API gateway (routes not configured yet) |
+| `gateway` | 8082 | API gateway (routes `/api/**`) |
 
 ## Requirements
 
 - Java 21
 - Gradle (via the wrapper, included in each service directory)
+- Docker + Docker Compose (for containerized run)
 
-## Running the project
+## Running with Docker Compose
+
+All four services are containerized. Each service has its own multi-stage `Dockerfile` (build → layer extraction → minimal `eclipse-temurin:21-jre` runtime running as a non-root user), and `docker-compose.yml` at the repo root orchestrates them.
+
+```bash
+docker compose up -d --build
+```
+
+Services start in dependency order: `eureka` must be healthy before the other three start, so they can register with the service registry.
+
+### Network topology
+
+Compose defines two isolated networks:
+
+| Network | Services | Purpose |
+|---|---|---|
+| `edge` | `gateway` | Sole entry point from the host |
+| `internal` | `eureka`, `gateway`, `api_service`, `db_service` | Inter-service communication |
+
+Access from the host is **only** possible through the gateway on port `8082`. Eureka, API, and DB services publish no host ports — they are reachable exclusively via the `internal` network, and all API traffic flows through the gateway (`/api/**` → `api_service` → `db_service` via Eureka + LoadBalancer).
+
+Only the gateway binds a host port:
+
+```bash
+docker compose ps
+```
+
+```
+NAME          STATUS                    PORTS
+api-service   Up X seconds (healthy)   8080/tcp
+db-service    Up X seconds (healthy)   8081/tcp
+eureka        Up X seconds (healthy)   8761/tcp
+gateway       Up X seconds (healthy)   0.0.0.0:8082->8082/tcp
+```
+
+## Running locally (without Docker)
 
 Each service is a standalone Gradle project with its own `./gradlew`. Run every command from inside the service directory.
 
@@ -27,6 +63,8 @@ cd db_service && ./gradlew bootRun
 cd gateway   && ./gradlew bootRun
 ```
 
+When running locally, services register with Eureka at `http://localhost:8761/eureka`. This is configurable via the `EUREKA_URI` environment variable (used by Docker Compose to point at the `eureka` container).
+
 `db_service` uses an in-memory H2 database (`jdbc:h2:mem:db`) that is seeded with 100 users by Flyway on startup. Data does not survive a restart.
 
 ## Tests
@@ -38,30 +76,30 @@ cd db_service  && ./gradlew test
 
 ## API
 
-All user endpoints are exposed through `api_service` on port 8080 and load-balanced to `db_service` via service discovery. The same endpoints are also reachable through the `gateway` on port 8082 under the `/api/**` route (e.g. `http://localhost:8082/api/users`).
+All user endpoints are defined by `api_service` and load-balanced to `db_service` via service discovery. The gateway on port `8082` is the only host-exposed entry point; requests under `/api/**` are forwarded to `api_service` (e.g. `http://localhost:8082/api/users`).
 
 ### List users (paginated)
 
 ```bash
-curl "http://localhost:8080/api/users"
+curl "http://localhost:8082/api/users"
 ```
 
 Optional query parameters: `page` (default `0`), `size` (default `20`), `sort` (default `lastName,asc`, supports `lastName` and `dateOfBirth`), `lastName` (partial, case-insensitive), `dateOfBirth` (`yyyy-MM-dd`).
 
 ```bash
-curl "http://localhost:8080/api/users?page=1&size=10&sort=dateOfBirth,desc&lastName=a"
+curl "http://localhost:8082/api/users?page=1&size=10&sort=dateOfBirth,desc&lastName=a"
 ```
 
 ### Get a user
 
 ```bash
-curl "http://localhost:8080/api/users/1"
+curl "http://localhost:8082/api/users/1"
 ```
 
 ### Create a user
 
 ```bash
-curl -X POST "http://localhost:8080/api/users" \
+curl -X POST "http://localhost:8082/api/users" \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "John",
@@ -74,7 +112,7 @@ curl -X POST "http://localhost:8080/api/users" \
 ### Update a user
 
 ```bash
-curl -X PUT "http://localhost:8080/api/users/1" \
+curl -X PUT "http://localhost:8082/api/users/1" \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "Jane",
@@ -87,5 +125,5 @@ curl -X PUT "http://localhost:8080/api/users/1" \
 ### Delete a user
 
 ```bash
-curl -X DELETE "http://localhost:8080/api/users/1"
+curl -X DELETE "http://localhost:8082/api/users/1"
 ```

@@ -1,0 +1,11 @@
+**/.gradle
+**/build
+**/bin
+**/.git
+**/.gitignore
+**/.gitattributes
+**/*.md
+**/gradlew.bat
+**/out
+**/.idea
+**/.vscode
