@@ -127,3 +127,18 @@ curl -X PUT "http://localhost:8082/api/users/1" \
 ```bash
 curl -X DELETE "http://localhost:8082/api/users/1"
 ```
+
+### Chaos (developer testing)
+
+Available through the gateway for simulating latency and failures:
+
+```bash
+curl "http://localhost:8082/api/dev/chaos?delayMs=500&errorRate=0"
+```
+
+Parameters:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `delayMs` | int | `5000` (5 s) | Simulated delay in milliseconds before responding |
+| `errorRate` | double | `0.5` | Probability (in %) of simulating an error, in the range `0–100` |

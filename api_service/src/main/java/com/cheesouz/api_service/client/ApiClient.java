@@ -3,6 +3,7 @@ package com.cheesouz.api_service.client;
 import java.time.LocalDate;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,11 +15,11 @@ import com.cheesouz.api_service.exception.UserNotFoundException;
 import reactor.core.publisher.Mono;
 
 @Component
-public class UserClient {
+public class ApiClient {
 
-    private final WebClient webClient;
+    private final WebClient webClient;;
 
-    public UserClient(WebClient.Builder loadBalancedWebClientBuilder) {
+    public ApiClient(WebClient.Builder loadBalancedWebClientBuilder) {
         this.webClient = loadBalancedWebClientBuilder
                 .baseUrl("http://db-service")
                 .build();
@@ -81,6 +82,18 @@ public class UserClient {
                 .onStatus(status -> status.value() == HttpStatus.NOT_FOUND.value(),
                         response -> Mono.error(new UserNotFoundException(id)))
                 .toBodilessEntity()
+                .block();
+    }
+
+    public ResponseEntity<String> chaos(int delayMs, double errorRate) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/dev/chaos")
+                        .queryParam("delayMs", delayMs)
+                        .queryParam("errorRate", errorRate)
+                        .build())
+                .exchangeToMono(response -> response.bodyToMono(String.class)
+                        .defaultIfEmpty("")
+                        .map(body -> ResponseEntity.status(response.statusCode()).body(body)))
                 .block();
     }
 }

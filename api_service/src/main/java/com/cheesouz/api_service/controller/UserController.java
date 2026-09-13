@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cheesouz.api_service.client.UserClient;
+import com.cheesouz.api_service.client.ApiClient;
 import com.cheesouz.api_service.dto.UserCreateRequest;
 import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
@@ -23,9 +23,9 @@ import com.cheesouz.api_service.dto.UserResponse;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-    private final UserClient userClient;
+    private final ApiClient userClient;
 
-    public UserController(UserClient userClient) {
+    public UserController(ApiClient userClient) {
         this.userClient = userClient;
     }
 
