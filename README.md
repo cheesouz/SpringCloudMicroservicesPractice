@@ -1,3 +1,4 @@
+## Ports
 | Service | Port | Role |
 |---|---|---|
 | `eureka` | 8761 | Service registry |
@@ -148,4 +149,43 @@ Parameters:
 for i in $(seq 1 30); do
   curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8082/api/users/3
 done
+```
+## Authentication (JWT) - fast setup with default JWT secret
+All CRUD endpoints need a JWT to be included in the request headers. The simplest way to acquire a token is by running the following curl commands from the root directory of the project. This is a quick setup version, which uses the default jwt secret value. See below to see how to run it 
+
+#### Generating a test token
+```bash
+cd api_service
+TOKEN=$(JWT_SECRET=this-is-a-long-random-secret-of-around-32-bytes ./scripts/generate-test-token.sh)
+echo "$TOKEN"
+```
+### Testing
+
+#### no token -> 401
+```bash
+curl http://localhost:8082/api/users
+```
+
+#### with token -> 200
+```bash
+curl http://localhost:8082/api/users -H "Authorization: Bearer $TOKEN"
+```
+
+```bash
+curl -X POST http://localhost:8082/api/users -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"firstName":"John","lastName":"Doe","emailAdress":"john.doe@example.com","dateOfBirth":"1990-05-15"}'
+```
+
+### Setup with custom JWT secret
+Wither update the env file or in project root run:
+```bash
+JWT_SECRET="$MY_SECRET" docker compose up -d --build
+```
+Generate the JWT token for testing
+```bash
+cd api_service
+TOKEN=$(JWT_SECRET="$MY_SECRET" ./scripts/generate-test-token.sh)
+```
+Test it as follows:
+```bash
+curl http://localhost:8082/api/users -H "Authorization: Bearer $TOKEN"
 ```

@@ -40,6 +40,7 @@ services:
       - internal
     environment:
       - EUREKA_URI=http://eureka:8761/eureka
+      - JWT_SECRET=${JWT_SECRET:-this-is-a-long-random-secret-of-around-32-bytes}
     depends_on:
       eureka:
         condition: service_healthy
