@@ -9,10 +9,12 @@ import java.util.concurrent.TimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.cheesouz.api_service.config.CorrelationIdHolder;
 import com.cheesouz.api_service.dto.UserCreateRequest;
 import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
@@ -40,6 +42,15 @@ public class ApiClient {
         RetryRegistry retryRegistry,
         CircuitBreakerRegistry circuitBreakerRegistry) {
                 this.webClient = loadBalancedWebClientBuilder
+                        .filter((request, next) -> {
+                            String correlationId = CorrelationIdHolder.get();
+                            if (correlationId == null || correlationId.isBlank()) {
+                                return next.exchange(request);
+                            }
+                            return next.exchange(ClientRequest.from(request)
+                                    .header(CORRELATION_ID_HEADER, correlationId)
+                                    .build());
+                        })
                         .baseUrl("http://db-service")
                         .build();
                 this.circuitBreakerRegistry = circuitBreakerRegistry;
@@ -132,6 +143,7 @@ public class ApiClient {
     }
 
     private static final String TARGET_SERVICE = "db-service";
+    private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
     private static final Duration TIMEOUT = Duration.ofSeconds(2);
 
     private <T> Mono<T> withResilience(Mono<T> mono, boolean withRetry) {
