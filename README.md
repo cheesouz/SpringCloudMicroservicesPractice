@@ -1,3 +1,5 @@
+[Swagger-UI link](http://localhost:8082/swagger-ui/index.html)
+
 ## Ports
 | Service | Port | Role |
 |---|---|---|
@@ -67,13 +69,6 @@ cd gateway   && ./gradlew bootRun
 When running locally, services register with Eureka at `http://localhost:8761/eureka`. This is configurable via the `EUREKA_URI` environment variable (used by Docker Compose to point at the `eureka` container).
 
 `db_service` uses an in-memory H2 database (`jdbc:h2:mem:db`) that is seeded with 100 users by Flyway on startup. Data does not survive a restart.
-
-## Tests
-
-```bash
-cd api_service && ./gradlew test
-cd db_service  && ./gradlew test
-```
 
 ## API
 

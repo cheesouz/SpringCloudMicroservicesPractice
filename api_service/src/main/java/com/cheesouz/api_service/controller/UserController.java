@@ -20,8 +20,12 @@ import com.cheesouz.api_service.dto.UserCreateRequest;
 import com.cheesouz.api_service.dto.UserPageResponse;
 import com.cheesouz.api_service.dto.UserResponse;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/users")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
     private final ApiClient userClient;
 
@@ -47,13 +51,14 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody UserCreateRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest request) {
         UserResponse created = userClient.createUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserCreateRequest request) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,
+            @Valid @RequestBody UserCreateRequest request) {
         UserResponse updated = userClient.updateUser(id, request);
         return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }

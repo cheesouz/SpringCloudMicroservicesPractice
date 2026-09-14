@@ -51,7 +51,7 @@ public class RateLimitFilter implements Filter, Ordered {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        if (isActuatorPath(request.getRequestURI())) {
+        if (isExemptPath(request.getRequestURI())) {
             chain.doFilter(request, response);
             return;
         }
@@ -97,9 +97,13 @@ public class RateLimitFilter implements Filter, Ordered {
         return request.getRemoteAddr();
     }
 
-    private static boolean isActuatorPath(String uri) {
-        return uri.equals("/actuator/health") || uri.equals("/actuator/info");
-    }
+    private static boolean isExemptPath(String uri) {
+    return uri.equals("/actuator/health")
+        || uri.equals("/actuator/info")
+        || uri.startsWith("/swagger-ui")
+        || uri.startsWith("/v3/api-docs")
+        || uri.startsWith("/webjars");
+}
 
     @Override
     public int getOrder() {

@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 
 @Configuration
 public class SecurityConfig {
@@ -29,9 +30,13 @@ public class SecurityConfig {
                                 "/actuator/health/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
+                                "/webjars/**",
                                 "/v3/api-docs/**",
                                 "/api/dev/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler()))
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(unauthorizedEntryPoint())
                         .jwt(Customizer.withDefaults()));
@@ -46,6 +51,16 @@ public class SecurityConfig {
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             response.getWriter().write(
                     "{\"error\":\"unauthorized\",\"message\":\"A valid JWT is required to access this resource.\"}");
+        };
+    }
+
+    private AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.getWriter().write(
+                    "{\"error\":\"forbidden\",\"message\":\"Access to this resource is forbidden.\"}");
         };
     }
 
