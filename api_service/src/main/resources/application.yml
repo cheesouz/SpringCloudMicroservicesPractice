@@ -23,10 +23,12 @@ resilience4j:
         retry-exceptions:
           - java.util.concurrent.TimeoutException
           - java.io.IOException
+          - org.springframework.web.reactive.function.client.WebClientRequestException
   circuitbreaker:
     instances:
       dbService:
         sliding-window-size: 3
         failure-rate-threshold: 10
+        minimum-number-of-calls: 3
         wait-duration-in-open-state: 5s
         permitted-number-of-calls-in-half-open-state: 3
