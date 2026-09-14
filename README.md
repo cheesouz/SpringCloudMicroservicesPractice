@@ -142,3 +142,10 @@ Parameters:
 |---|---|---|---|
 | `delayMs` | int | `5000` (5 s) | Simulated delay in milliseconds before responding |
 | `errorRate` | double | `0.5` | Probability (in %) of simulating an error, in the range `0–100` |
+
+## How to trigger rate limiting (gateway)
+```bash
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8082/api/users/3
+done
+```
